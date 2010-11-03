@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html> <head>
+<title>Coconut changes</title>
+<style type="text/css">
+.rev {color:grey}
+.who {font-weight:bold}
+</style>
+</head>
+
+<body>
+<table border="1" cellspacing="0" cellpadding="2">
+  <tr><th>Changes</th><th>Source</th><th>Builds</th></tr>
+  {% for chunk in chunks %}
+  <tr>
+    <td>
+  <div>{{chunk.change.branch}} <span class="rev">({{chunk.change.revision}})</span>
+     by <span class="who">{{chunk.change.who}}</span></div>
+    </td>
+     <td></td>
+     <td>
+       {% for build in chunk.builds %}
+       <div><a href="{% url coconut.views.build build.id %}"><span class="builder">{{build.builder.name}}</span>
+	 {{build.buildnumber}} </a></div>
+	 {% endfor %}
+	 </td>
+  </tr>
+  {% endfor %}
+</table>
+<p>
+<a href="{% url coconut.views.changes %}?count={{count}}&offset={{next}}">older</a>
+</p>
+</body>
+</html>

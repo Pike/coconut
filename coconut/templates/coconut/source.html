@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html> <head>
+<title>Coconut source {{revision}}</title>
+<style type="text/css">
+.rev {color:grey}
+.who {font-weight:bold}
+.comment {white-space:pre;font-style:italic;margin-left:1em;}
+</style>
+</head>
+
+<body>
+<table border="1" cellspacing="0" cellpadding="2">
+  <tr><th>Source</th><th>Changes</th><th>Builds</th></tr>
+  {% for source in sources %}
+  <tr>
+   <td>{{source.branch}} <span class="rev">({{source.revision}})</span></td>
+   <td>
+     {% for change in source.changes.all %}
+   <div>{{change.branch}} <span class="rev">({{change.revision}})</span>
+     by <span class="who">{{change.who}}</span></div>
+     <div class="comment">{{change.comments}}</div>
+      {% endfor %}
+     </td>
+     <td>
+       {% for build in source.builds.all %}
+       <div><a href="{% url coconut.views.build build.id %}"><span class="builder">{{build.builder.name}}</span>
+	 {{build.buildnumber}} </a></div>
+	 {% endfor %}
+	 </td>
+  </tr>
+  {% endfor %}
+</table>
+</body>
+</html>

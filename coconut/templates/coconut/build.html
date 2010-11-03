@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html> <head>
+<title>Coconut: {{build.builder.name}} {{build.buildnumber}}</title>
+<style type="text/css">
+.rev {color:grey}
+.who {font-weight:bold}
+.success {background-color:green;}
+.fail {background-color:red;}
+</style>
+</head>
+
+<body>
+<table>
+  <tr><td colspan="2">{{build.builder.name}} {{build.buildnumber}}</td></tr>
+  <tr>
+    <td>Started:</td>
+    <td>{{build.starttime}}</td>
+  </tr>
+  <tr>
+    <td>Ended:</td>
+    <td>{{build.endtime}}</td>
+  </tr>
+  <tr>
+    <td>Duration:</td>
+    <td>{{duration}} seconds</td>
+</table>
+
+<p id="steps">Steps:</p>
+<table border="1" cellspacing="0" cellpadding="2">
+  {% for step in steps %}
+  <tr>
+    <td>{{step.description|join:" "}}</td>
+    <td style="width:600px">{% if step.width %}
+    <div title="{{step.duration|floatformat}} second(s)"
+      style="margin-left:{{step.offset|floatformat}}%;width:{{step.width|floatformat}}%"
+      class="{{step.class}}">&nbsp;</div>{% endif %}</td>
+  </tr>
+  {% endfor %}
+</table>
+<p id="properties">Properties</p>
+<table>
+  <tr><th>Name</th><th>Source</th><th>Value</th>
+  {% for prop in properties %}
+  <tr>
+    <td>{{prop.name}}</td>
+    <td>{{prop.source}}</td>
+    <td>{{prop.value}}</td>
+  </tr>
+  {% endfor %}
+</table>
+<p id="changes">Changes</p>
+<table>
+  {% for change in build.source.changes.all %}
+  <tr>
+    <td>{{change.who}}</td>
+    <td>{{change.branch}}</td>
+    <td>{{change.comments}}</td>
+  </tr>
+  {% endfor %}
+</table>
+</body>
+</html>
