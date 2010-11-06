@@ -44,6 +44,8 @@
 .who {font-weight:bold}
 .success {background-color:green;}
 .fail {background-color:red;}
+.warning {background-color:orange;}
+.exception {background-color:purple;}
 </style>
 </head>
 
@@ -68,9 +70,9 @@
   {% for step in steps %}
   <tr>
     <td>{{step.description|join:" "}}</td>
-    <td style="width:600px">{% if step.width %}
-    <div title="{{step.duration|floatformat}} second(s)"
-      style="margin-left:{{step.offset|floatformat}}%;width:{{step.width|floatformat}}%"
+    <td title="{{step.duration|floatformat}} second(s)"
+      style="width:600px">{% if step.width %}
+    <div style="margin-left:{{step.offset|floatformat}}%;width:{{step.width|floatformat}}%"
       class="{{step.class}}">&nbsp;</div>{% endif %}</td>
   </tr>
   {% endfor %}
