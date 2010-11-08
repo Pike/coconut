@@ -38,42 +38,55 @@
 
 <!DOCTYPE HTML>
 <html> <head>
-<title>Coconut sources</title>
+<title>Coconut sources {{revisions|join:", "}}</title>
 <style type="text/css">
-.rev {color:grey}
+.rev {color:grey;font-size:smaller;}
 .who {font-weight:bold}
-.comment {white-space:pre;font-style:italic;margin-left:1em;}
+.comment {white-space:pre;font-style:italic;margin-left:1em;overflow:auto;width:30em;}
+td {vertical-align:top}
+.success {color:green;}
+.fail {color:red;}
+.warning {color:orange;}
+.exception {color:purple;}
 </style>
 </head>
 
 <body>
 <table border="1" cellspacing="0" cellpadding="2">
-  <tr><th>Source</th><th>Changes</th><th>Builds</th></tr>
+  <tr><th>Source</th><th>Changes</th><th>Platform</th><th>Builds</th></tr>
   {% for source in sources %}
+  {% with source.builds|length|default:"1" as rowspan %}
   <tr>
-   <td>{{source.branch}} <span class="rev"><a href="{% url coconut.views.source source.revision %}">({{source.revision}})</a></span></td>
-   <td>
-     {% for change in source.changes.all %}
-   <div>{{change.branch}} <span class="rev">({{change.revision}})</span>
+   <td rowspan="{{rowspan}}">{{source.s.branch}} <br><span
+     class="rev"><a href="{% url coconut.views.sources %}?revision={{source.s.revision}}">({{source.s.revision}})</a></span></td>
+   <td rowspan="{{rowspan}}">
+     {% for change in source.s.changes.all %}
+   <div>{{change.branch}}<br><span class="rev">({{change.revision}})</span><br>
      by <span class="who">{{change.who}}</span></br>
      <div class="comment">{{change.comments}}</div>
    </div>
       {% endfor %}
      </td>
+     {% for pb in source.builds %}
+     {% if not forloop.first %}<tr>{% endif %}
+     <td>{{pb.platform}}</td>
      <td>
-       {% for build in source.builds.all %}
-       <div><a href="{% url coconut.views.build build.id %}"><span class="builder">{{build.builder.name}}</span>
-	 {{build.buildnumber}} </a></div>
+       {% for build in pb.builds %}
+       <div><a class="{{build.result}}" href="{% url coconut.views.build build.id %}"><span class="builder">{{build.builder}}</span>
+	 {{build.number}} </a></div>
 	 {% endfor %}
 	 </td>
+	 {% if not forloop.last %}</tr>{% endif %}
+  {% endfor %}
+  {% endwith %}
   </tr>
   {% endfor %}
-</table>
+</table>{% if next %}
 <p>
-<a href="{% url coconut.views.sources %}?count={{count}}&offset={{next}}{% if exclude_empty %}&exclude_empty{%endif%}">older</a> sourcestamps
+<a href="{% url coconut.views.sources %}?count={{count}}&offset={{next}}{% if exclude_empty %}&exclude_empty{%endif%}{%for branch in  branches%}&branch={{branch|urlencode}}{%endfor%}">older</a> sourcestamps
 {% if not exclude_empty %}
-or <a href="{% url coconut.views.sources %}?count={{count}}&exclude_empty{% if offset %}&offset={{offset}}{%endif%}">exclude empty sources</a>
+or <a href="{% url coconut.views.sources %}?count={{count}}&exclude_empty{% if offset %}&offset={{offset}}{%endif%}{%for branch in  branches%}&branch={{branch|urlencode}}{%endfor%}">exclude empty sources</a>
 {% endif %}
-</p>
+</p>{% endif %}
 </body>
 </html>

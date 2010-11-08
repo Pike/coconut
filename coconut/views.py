@@ -39,18 +39,25 @@
 
 from django.shortcuts import render_to_response
 
-from dmstatus.models import Sourcestamp, Change, Source_Changes, Build
+from dmstatus.models import Sourcestamp, Change, Source_Changes, Build,\
+     Build_Properties, Property
 
 try:
     import json
 except:
     import simplejson as json
+from collections import defaultdict
 from datetime import datetime
 now = datetime(2010, 8, 31, 13, 0, 0)
+stati = ['success','warning','fail','skipped','exception']
 
 def index(request):
     return render_to_response('coconut/index.html', {})
 
+
+class PlatformBuilds(defaultdict):
+    def __init__(self):
+        defaultdict.__init__(self, list)
 
 def sources(request):
     count = int(request.GET.get('count', 50))
@@ -60,13 +67,45 @@ def sources(request):
     if 'exclude_empty' in request.GET:
         _sources = _sources.exclude(builds__isnull=True)
         _sources = _sources.exclude(changes__isnull=True)
+    if 'branch' in request.GET:
+        _sources = _sources.filter(branch__contains=request.GET['branch'])
+    if 'category' in request.GET:
+        _sources = _sources.filter(builds__builder__category=request.GET['category']).distinct()
+    if 'revision' in request.GET:
+        _sources = _sources.filter(revision=request.GET['revision'])
     _sources = _sources[:count]
+    _sources=list(_sources)
+    builds = Build.objects.filter(source__in=_sources).order_by('starttime')
+    if 'category' in request.GET:
+        builds = builds.filter(builder__category=request.GET['category'])
+    builds = list(builds.select_related('builder'))
+    p2plat=dict(map(lambda t:(t[0],json.loads(t[1])),
+                    Property.objects.filter(name='platform').values_list('id','value')))
+    bids = map(lambda b: b.id, builds)
+    bps = Build_Properties.objects.filter(build__in=bids,
+                                          property__in=p2plat.keys())
+    b2plat = dict(map(lambda t: (t[0],p2plat[t[1]]),
+                      bps.values_list('build__id','property__id')))
+    s2b = defaultdict(PlatformBuilds)
+    for b in builds:
+        bd = b.__dict__
+        platform = b2plat.get(b.id, 'unknown')
+        s2b[b.source.id][platform].append({'builder': b.builder.name,
+                                 'number': b.buildnumber,
+                                 'id': b.id,
+                                 'platform': platform,
+                                 'result': b.result is not None and stati[b.result] or "running"})
+    def toList(dd):
+        return [{'platform':k,'builds':dd[k]} for k in sorted(dd.keys())]
+    _sources = map(lambda _s:{"s":_s, "builds":toList(s2b[_s.id])}, _sources)
     return render_to_response('coconut/sources.html',
                               {
                                   'sources':_sources,
-                                  'next':_sources[count-1].id,
+                                  'next':_sources[-1]['s'].id,
                                   'offset': request.GET.get('offset', None),
                                   'count':count,
+                                  'branches': request.GET.getlist('branch'),
+                                  'revisions': request.GET.getlist('revision'),
                                   'exclude_empty': 'exclude_empty' in request.GET
                                })
 
@@ -106,7 +145,6 @@ def changes(request):
                                })
 
 
-stati = ['success','warning','fail','exception']
 def build(request, id):
     """Show info about a particular build.
 
@@ -118,10 +156,11 @@ def build(request, id):
     fulltime = (b.endtime - b.starttime).seconds*0.01
     def mangle(s):
         d = s.__dict__.copy()
-        if s.starttime is not None:
-            d['offset'] = (s.starttime - b.starttime).seconds/fulltime
+        if (s.starttime is not None):
             d['duration'] = (s.endtime - s.starttime).seconds
-            d['width'] = d['duration']/fulltime
+            if fulltime:
+                d['offset'] = (s.starttime - b.starttime).seconds/fulltime
+                d['width'] = d['duration']/fulltime
         d['description'] = json.loads(s.description)
         d['class'] = s.status is not None and stati[s.status] or "future"
         return d
@@ -137,5 +176,6 @@ def build(request, id):
                                   'build': b,
                                   'steps': steps,
                                   'duration': (b.endtime-b.starttime).seconds,
-                                  'properties': properties
+                                  'properties': properties,
+                                  'result': b.result is not None and stati[b.result] or 'running'
                                   })

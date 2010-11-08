@@ -51,7 +51,7 @@
 
 <body>
 <table>
-  <tr><td colspan="2">{{build.builder.name}} {{build.buildnumber}}</td></tr>
+  <tr><td colspan="2">{{build.builder.name}} {{build.buildnumber}} <em>{{result}}</em></td></tr>
   <tr>
     <td>Started:</td>
     <td>{{build.starttime}}</td>
@@ -63,6 +63,15 @@
   <tr>
     <td>Duration:</td>
     <td>{{duration}} seconds</td>
+  </tr>
+  <tr>
+    <td>Master:</td>
+    <td>{{build.master.name}}</td>
+  </tr>
+  <tr>
+    <td>Category:</td>
+    <td>{{build.builder.category}}</td>
+  </tr>
 </table>
 
 <p id="steps">Steps:</p>
