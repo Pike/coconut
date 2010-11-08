@@ -110,15 +110,6 @@ def sources(request):
                                })
 
 
-def source(request, revision):
-    _sources = Sourcestamp.objects.filter(revision=revision).order_by('-pk')
-    return render_to_response('coconut/source.html',
-                              {
-                                  'sources': _sources,
-                                  'revision': revision
-                               })
-
-
 def changes(request):
     count = int(request.GET.get('count', 50))
     _changes = Change.objects.order_by('-pk')
